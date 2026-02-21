@@ -1,0 +1,64 @@
+{
+  "rubric_name": "ds_data_leakage",
+  "description": "Rubric for detecting data leakage patterns in data science pipelines. Checks for target leakage, train-test contamination, temporal leakage, feature leakage from future data, and improper preprocessing order.",
+  "task_type": "ds_data_leakage",
+  "task_type_keywords": ["ds_evaluation", "ds_training", "ds_feature_engineering", "ds_ensemble"],
+  "dimensions": [
+    {"name": "leakage_prevention", "weight": 0.40, "description": "No target information leaks into features or preprocessing"},
+    {"name": "split_integrity", "weight": 0.30, "description": "Train/test/validation splits are clean with no contamination"},
+    {"name": "temporal_correctness", "weight": 0.15, "description": "No future information used in training when temporal ordering exists"},
+    {"name": "preprocessing_order", "weight": 0.15, "description": "Scaling, encoding, and imputation fitted only on training data"}
+  ],
+  "checks": [
+    {
+      "name": "target_column_in_features",
+      "description": "Verify that the target column is not included in the feature matrix used for training or prediction. The target must be separated before any feature engineering or model training.",
+      "severity": "critical"
+    },
+    {
+      "name": "future_feature_leakage",
+      "description": "Check that no features are derived from future data relative to the prediction point. Features must only use information available at prediction time.",
+      "severity": "critical"
+    },
+    {
+      "name": "train_test_contamination",
+      "description": "Verify that cross-validation folds and train/test splits do not share overlapping samples. OOF predictions must use held-out data only.",
+      "severity": "critical"
+    },
+    {
+      "name": "preprocessing_before_split",
+      "description": "Check that data normalization, encoding, and imputation are not fitted on the full dataset before splitting. These transforms must be fitted on training data only and applied to test data.",
+      "severity": "high"
+    },
+    {
+      "name": "feature_selection_leakage",
+      "description": "Ensure that feature selection (correlation analysis, variance thresholds) is performed within the cross-validation loop, not on the full dataset before splitting.",
+      "severity": "high"
+    },
+    {
+      "name": "aggregation_leakage",
+      "description": "Check that aggregate statistics (mean encoding, target encoding, group-level features) do not include information from the test set or future observations.",
+      "severity": "high"
+    },
+    {
+      "name": "duplicate_row_across_splits",
+      "description": "Verify that no identical or near-identical rows appear in both training and test sets, which could inflate performance metrics.",
+      "severity": "medium"
+    },
+    {
+      "name": "temporal_split_ordering",
+      "description": "When data has a temporal dimension, verify that splits respect chronological order with no random shuffling that would mix future and past observations.",
+      "severity": "medium"
+    },
+    {
+      "name": "external_data_alignment",
+      "description": "If external data sources are joined, verify that the join respects temporal ordering and does not introduce future information from the external source.",
+      "severity": "medium"
+    },
+    {
+      "name": "evaluation_on_training_data",
+      "description": "Check that final model evaluation metrics are computed on held-out data, not on the training set. In-sample metrics must be clearly labeled as such.",
+      "severity": "low"
+    }
+  ]
+}

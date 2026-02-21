@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: associate-postgres
+    environment:
+      POSTGRES_USER: associate
+      POSTGRES_PASSWORD: associate
+      POSTGRES_DB: the_associate
+    ports:
+      - "5433:5432"
+    volumes:
+      - associate_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U associate -d the_associate"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  associate_pgdata:

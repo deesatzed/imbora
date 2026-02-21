@@ -1,0 +1,1635 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://the-associate.dev/schemas/agent_packet_v1.schema.json",
+  "title": "Agent Packet Contract v1",
+  "description": "Machine-native packet schema for inter-agent and intra-agent coordination.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "packet_id",
+    "packet_type",
+    "channel",
+    "run_phase",
+    "created_at",
+    "sender",
+    "recipients",
+    "trace",
+    "routing",
+    "confidence",
+    "symbolic_keys",
+    "payload"
+  ],
+  "properties": {
+    "protocol_version": {
+      "const": "apc/1.0"
+    },
+    "packet_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "packet_type": {
+      "type": "string",
+      "enum": [
+        "TASK_IR",
+        "IDEA",
+        "CLAIM",
+        "ARTIFACT",
+        "SIGNAL",
+        "EVAL",
+        "TRANSFER",
+        "ARBITRATION",
+        "DECISION",
+        "RETRACTION",
+        "HEARTBEAT",
+        "ACK",
+        "NACK",
+        "ERROR"
+      ]
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "INTER_AGENT",
+        "INTRA_AGENT"
+      ]
+    },
+    "run_phase": {
+      "type": "string",
+      "enum": [
+        "RESEARCH",
+        "DISCOVERY",
+        "REFINEMENT",
+        "CONVERGENCE",
+        "ARBITRATION",
+        "EXECUTION",
+        "VALIDATION",
+        "PROMOTION"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sender": {
+      "$ref": "#/$defs/actor"
+    },
+    "recipients": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/recipient"
+      }
+    },
+    "trace": {
+      "$ref": "#/$defs/trace"
+    },
+    "routing": {
+      "$ref": "#/$defs/routing"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "symbolic_keys": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "capability_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lineage": {
+      "$ref": "#/$defs/lineage"
+    },
+    "proof_bundle": {
+      "$ref": "#/$defs/proof_bundle"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_id",
+        "role",
+        "swarm_id"
+      ],
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "swarm_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dialect_id": {
+          "type": "string"
+        },
+        "dialect_hash": {
+          "type": "string"
+        },
+        "model_id": {
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "recipient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_id"
+      ],
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string"
+        },
+        "swarm_id": {
+          "type": "string"
+        }
+      }
+    },
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "session_id",
+        "run_id",
+        "task_id",
+        "root_packet_id",
+        "generation",
+        "step"
+      ],
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "root_packet_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "parent_packet_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "step": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "vector_clock": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "delivery_mode",
+        "priority",
+        "ttl_ms",
+        "requires_ack"
+      ],
+      "properties": {
+        "delivery_mode": {
+          "type": "string",
+          "enum": [
+            "DIRECT",
+            "MULTICAST",
+            "BROADCAST",
+            "SUBSTRATE"
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        },
+        "ttl_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        },
+        "requires_ack": {
+          "type": "boolean"
+        },
+        "ack_timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600000
+        },
+        "retry_limit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol_id"
+      ],
+      "properties": {
+        "protocol_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_protocol_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ancestor_swarms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cross_use_case": {
+          "type": "boolean"
+        },
+        "transfer_mode": {
+          "type": "string",
+          "enum": [
+            "WINNER_TO_LOSERS",
+            "CROSS_USE_CASE",
+            "COMMONS_SEED",
+            "SELECTIVE_IMPORT"
+          ]
+        }
+      }
+    },
+    "falsifier_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "target_claim_id",
+        "test",
+        "fail_if",
+        "cost"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "target_claim_id": {
+          "type": "string"
+        },
+        "test": {
+          "type": "string"
+        },
+        "fail_if": {
+          "type": "string"
+        },
+        "cost": {
+          "type": "string",
+          "enum": [
+            "low",
+            "med",
+            "high",
+            "extreme"
+          ]
+        }
+      }
+    },
+    "proof_bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "falsifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/falsifier_contract"
+          }
+        },
+        "gate_scores": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rtf": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "stability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "audit": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "outcome": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "learnability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "symbol_coverage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "generalization_ratio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "drift_risk": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "signatures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "agent_id",
+              "payload_hash"
+            ],
+            "properties": {
+              "agent_id": {
+                "type": "string"
+              },
+              "payload_hash": {
+                "type": "string"
+              },
+              "signature": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ir_header": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_id",
+        "run_id",
+        "swarm_id",
+        "dialect_id",
+        "dialect_hash"
+      ],
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "swarm_id": {
+          "type": "string"
+        },
+        "dialect_id": {
+          "type": "string"
+        },
+        "dialect_hash": {
+          "type": "string"
+        }
+      }
+    },
+    "claim_object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "hypothesis_id",
+        "text",
+        "confidence_pre",
+        "confidence_post"
+      ],
+      "properties": {
+        "type": {
+          "const": "Claim"
+        },
+        "id": {
+          "type": "string"
+        },
+        "hypothesis_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "confidence_pre": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "confidence_post": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "falsifier_object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "target_claim_id",
+        "test",
+        "fail_if",
+        "cost"
+      ],
+      "properties": {
+        "type": {
+          "const": "Falsifier"
+        },
+        "id": {
+          "type": "string"
+        },
+        "target_claim_id": {
+          "type": "string"
+        },
+        "test": {
+          "type": "string"
+        },
+        "fail_if": {
+          "type": "string"
+        },
+        "cost": {
+          "type": "string",
+          "enum": [
+            "low",
+            "med",
+            "high",
+            "extreme"
+          ]
+        }
+      }
+    },
+    "decision_object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "recommendation",
+        "priority_distribution",
+        "next_actions"
+      ],
+      "properties": {
+        "type": {
+          "const": "Decision"
+        },
+        "id": {
+          "type": "string"
+        },
+        "recommendation": {
+          "type": "string"
+        },
+        "priority_distribution": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "next_actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "constraint_object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "constraint_kind",
+        "expression"
+      ],
+      "properties": {
+        "type": {
+          "const": "Constraint"
+        },
+        "id": {
+          "type": "string"
+        },
+        "constraint_kind": {
+          "type": "string",
+          "enum": [
+            "BUDGET",
+            "SAFETY",
+            "LATENCY",
+            "QUALITY",
+            "COMPLIANCE"
+          ]
+        },
+        "expression": {
+          "type": "string"
+        }
+      }
+    },
+    "evidence_object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "kind",
+        "ref",
+        "supports"
+      ],
+      "properties": {
+        "type": {
+          "const": "Evidence"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "code",
+            "test",
+            "log",
+            "trace",
+            "doc",
+            "bench"
+          ]
+        },
+        "ref": {
+          "type": "string"
+        },
+        "supports": {
+          "type": "boolean"
+        }
+      }
+    },
+    "formula_ode_system": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state_variables",
+        "equations",
+        "parameters",
+        "initial_state"
+      ],
+      "properties": {
+        "state_variables": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "equations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "initial_state": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "time_start": {
+          "type": "number"
+        },
+        "time_end": {
+          "type": "number"
+        },
+        "num_points": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 100000
+        }
+      }
+    },
+    "formula_bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "representation_version": {
+          "type": "string"
+        },
+        "latex_full": {
+          "type": "string"
+        },
+        "latex_compact": {
+          "type": "string"
+        },
+        "sympy_str": {
+          "type": "string"
+        },
+        "sympy_canonical": {
+          "type": "string"
+        },
+        "ast_json": {
+          "type": "object"
+        },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "var_ontology": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "functor_map": {
+          "type": "string"
+        },
+        "simulation_snippet": {
+          "type": "string"
+        },
+        "equilibria_sympy": {
+          "type": "string"
+        },
+        "ode_system": {
+          "$ref": "#/$defs/formula_ode_system"
+        }
+      }
+    },
+    "task_ir_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ir_header",
+        "objects"
+      ],
+      "properties": {
+        "ir_header": {
+          "$ref": "#/$defs/ir_header"
+        },
+        "objects": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/claim_object"
+              },
+              {
+                "$ref": "#/$defs/falsifier_object"
+              },
+              {
+                "$ref": "#/$defs/decision_object"
+              },
+              {
+                "$ref": "#/$defs/constraint_object"
+              },
+              {
+                "$ref": "#/$defs/evidence_object"
+              }
+            ]
+          }
+        },
+        "normalization": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ordering": {
+              "type": "string"
+            },
+            "text_normalization": {
+              "type": "string"
+            },
+            "hash_algorithm": {
+              "type": "string"
+            },
+            "canonical_hash": {
+              "type": "string"
+            }
+          }
+        },
+        "formula_bundle": {
+          "$ref": "#/$defs/formula_bundle"
+        }
+      }
+    },
+    "idea_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method_id",
+        "intent",
+        "assumptions",
+        "required_capabilities",
+        "expected_impact",
+        "failure_modes"
+      ],
+      "properties": {
+        "method_id": {
+          "type": "string"
+        },
+        "intent": {
+          "type": "string"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "required_capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "complexity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "time_class": {
+              "type": "string"
+            },
+            "space_class": {
+              "type": "string"
+            },
+            "data_volume_class": {
+              "type": "string",
+              "enum": [
+                "XS",
+                "S",
+                "M",
+                "L",
+                "XL"
+              ]
+            }
+          }
+        },
+        "expected_impact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "quality_gain",
+            "cost_change",
+            "risk_change"
+          ],
+          "properties": {
+            "quality_gain": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            },
+            "cost_change": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            },
+            "risk_change": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            }
+          }
+        },
+        "failure_modes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "description",
+              "mitigation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "mitigation": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "test_contract_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "language_bindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "language",
+              "adapter_hint"
+            ],
+            "properties": {
+              "language": {
+                "type": "string"
+              },
+              "adapter_hint": {
+                "type": "string"
+              },
+              "required_runtime": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "formula_bundle": {
+          "$ref": "#/$defs/formula_bundle"
+        }
+      }
+    },
+    "claim_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_id",
+        "hypothesis_id",
+        "text",
+        "confidence_pre",
+        "confidence_post"
+      ],
+      "properties": {
+        "claim_id": {
+          "type": "string"
+        },
+        "hypothesis_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "confidence_pre": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "confidence_post": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "artifact_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "artifact_kind",
+        "artifact_uri",
+        "artifact_hash"
+      ],
+      "properties": {
+        "artifact_id": {
+          "type": "string"
+        },
+        "artifact_kind": {
+          "type": "string",
+          "enum": [
+            "CODE_PATCH",
+            "MODEL_SNAPSHOT",
+            "FEATURE_SET",
+            "DATASET_SLICE",
+            "METRIC_REPORT",
+            "EXECUTION_LOG",
+            "PROTOCOL"
+          ]
+        },
+        "artifact_uri": {
+          "type": "string"
+        },
+        "artifact_hash": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "adapter": {
+          "type": "string"
+        },
+        "formula_bundle": {
+          "$ref": "#/$defs/formula_bundle"
+        }
+      }
+    },
+    "signal_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "signal"
+      ],
+      "properties": {
+        "signal": {
+          "type": "string",
+          "enum": [
+            "START",
+            "PAUSE",
+            "RESUME",
+            "QUERY",
+            "SYNC",
+            "STOP",
+            "HEARTBEAT",
+            "READY_FOR_TRANSFER",
+            "RETRY",
+            "CANCEL",
+            "VETO"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "expected_response_by": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "eval_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric_set",
+        "thresholds",
+        "pass"
+      ],
+      "properties": {
+        "metric_set": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rtf",
+            "stability",
+            "audit",
+            "outcome",
+            "learnability",
+            "generalization_ratio"
+          ],
+          "properties": {
+            "rtf": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "stability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "audit": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "outcome": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "learnability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "symbol_coverage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "generalization_ratio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "drift_risk": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "thresholds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rtf",
+            "stability",
+            "audit",
+            "outcome",
+            "learnability",
+            "generalization_ratio"
+          ],
+          "properties": {
+            "rtf": {
+              "type": "number"
+            },
+            "stability": {
+              "type": "number"
+            },
+            "audit": {
+              "type": "number"
+            },
+            "outcome": {
+              "type": "number"
+            },
+            "learnability": {
+              "type": "number"
+            },
+            "generalization_ratio": {
+              "type": "number"
+            }
+          }
+        },
+        "pass": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "transfer_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol_id",
+        "from_swarm",
+        "to_swarm",
+        "sender_score",
+        "receiver_score",
+        "transfer_policy"
+      ],
+      "properties": {
+        "protocol_id": {
+          "type": "string"
+        },
+        "from_swarm": {
+          "type": "string"
+        },
+        "to_swarm": {
+          "type": "string"
+        },
+        "sender_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "receiver_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "transfer_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "min_generation"
+          ],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "WINNER_TO_LOSERS",
+                "CROSS_USE_CASE",
+                "COMMONS_SEED",
+                "SELECTIVE_IMPORT"
+              ]
+            },
+            "min_generation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "threshold_multiplier": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "top_k": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "arbitration_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "arbitration_id",
+        "candidates",
+        "winner_candidate_id",
+        "scoring"
+      ],
+      "properties": {
+        "arbitration_id": {
+          "type": "string"
+        },
+        "candidates": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "candidate_id",
+              "packet_ref_ids",
+              "score_components",
+              "total_score"
+            ],
+            "properties": {
+              "candidate_id": {
+                "type": "string"
+              },
+              "packet_ref_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "score_components": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "total_score": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "risk_flags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "winner_candidate_id": {
+          "type": "string"
+        },
+        "scoring": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "vetoes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "agent_id",
+              "reason"
+            ],
+            "properties": {
+              "agent_id": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "decision_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision_id",
+        "recommendation",
+        "priority_distribution",
+        "next_actions"
+      ],
+      "properties": {
+        "decision_id": {
+          "type": "string"
+        },
+        "recommendation": {
+          "type": "string"
+        },
+        "priority_distribution": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "next_actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "commitment_level": {
+          "type": "string",
+          "enum": [
+            "PROPOSED",
+            "APPROVED",
+            "EXECUTING",
+            "DONE"
+          ]
+        }
+      }
+    },
+    "retraction_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_packet_id",
+        "reason"
+      ],
+      "properties": {
+        "target_packet_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "replacement_packet_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "ack_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "acked_packet_id",
+        "ack_status"
+      ],
+      "properties": {
+        "acked_packet_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "ack_status": {
+          "type": "string",
+          "enum": [
+            "ACCEPTED",
+            "REJECTED",
+            "DEFERRED"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "error_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "error_code",
+        "message",
+        "retryable"
+      ],
+      "properties": {
+        "error_code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "channel": {
+            "const": "INTRA_AGENT"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "recipients": {
+            "maxItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "const": "TASK_IR"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/task_ir_payload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "const": "IDEA"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/idea_payload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "const": "CLAIM"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "proof_bundle"
+        ],
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/claim_payload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "const": "ARTIFACT"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/artifact_payload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "enum": [
+              "SIGNAL",
+              "HEARTBEAT"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/signal_payload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "const": "EVAL"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "proof_bundle"
+        ],
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/eval_payload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "const": "TRANSFER"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "lineage"
+        ],
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/transfer_payload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "const": "ARBITRATION"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/arbitration_payload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "const": "DECISION"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/decision_payload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "const": "RETRACTION"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/retraction_payload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "enum": [
+              "ACK",
+              "NACK"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/ack_payload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "packet_type": {
+            "const": "ERROR"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/error_payload"
+          }
+        }
+      }
+    }
+  ]
+}

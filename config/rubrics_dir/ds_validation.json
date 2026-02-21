@@ -1,0 +1,69 @@
+{
+  "rubric_name": "ds_validation",
+  "description": "Rubric for validating data science methodology: cross-validation strategy, metric selection, statistical significance, baseline comparison, and evaluation completeness.",
+  "task_type": "ds_validation",
+  "task_type_keywords": ["ds_evaluation", "ds_training", "ds_ensemble", "ds_audit"],
+  "dimensions": [
+    {"name": "cv_methodology", "weight": 0.30, "description": "Cross-validation strategy is appropriate for the data and problem type"},
+    {"name": "metric_selection", "weight": 0.25, "description": "Evaluation metrics are appropriate for the problem type and class distribution"},
+    {"name": "statistical_rigor", "weight": 0.25, "description": "Results include variance estimates and significance testing where applicable"},
+    {"name": "evaluation_completeness", "weight": 0.20, "description": "Multiple evaluation dimensions covered beyond primary metric"}
+  ],
+  "checks": [
+    {
+      "name": "cv_strategy_appropriateness",
+      "description": "Verify that the cross-validation strategy matches the data characteristics. Stratified K-Fold for imbalanced classification, TimeSeriesSplit for temporal data, GroupKFold when groups should not be split.",
+      "severity": "critical"
+    },
+    {
+      "name": "metric_matches_problem",
+      "description": "Check that evaluation metrics are appropriate for the problem type. Accuracy alone is insufficient for imbalanced datasets; R2 alone is insufficient when scale of errors matters.",
+      "severity": "critical"
+    },
+    {
+      "name": "baseline_comparison_present",
+      "description": "Verify that model performance is compared against a meaningful baseline (majority class, mean predictor, simple heuristic). Models must demonstrate clear improvement over naive approaches.",
+      "severity": "high"
+    },
+    {
+      "name": "cv_fold_count_sufficient",
+      "description": "Check that the number of CV folds is appropriate. Fewer than 3 folds provides unreliable estimates. More than 10 folds may be unnecessary for large datasets and wasteful for small ones.",
+      "severity": "high"
+    },
+    {
+      "name": "variance_reporting",
+      "description": "Verify that CV scores include both mean and standard deviation. Point estimates without variance are misleading and prevent comparing model stability.",
+      "severity": "high"
+    },
+    {
+      "name": "multi_metric_evaluation",
+      "description": "Check that evaluation includes multiple complementary metrics. Classification should include accuracy plus F1/precision/recall/AUC. Regression should include R2 plus MAE/RMSE.",
+      "severity": "medium"
+    },
+    {
+      "name": "class_imbalance_handling",
+      "description": "For classification with imbalanced classes, verify that class-weighted or macro-averaged metrics are used, and that evaluation accounts for the imbalance rather than being dominated by majority class.",
+      "severity": "medium"
+    },
+    {
+      "name": "conformal_calibration",
+      "description": "If uncertainty quantification is applied, verify that conformal prediction coverage matches target coverage rate. Miscalibrated uncertainty estimates are worse than none.",
+      "severity": "medium"
+    },
+    {
+      "name": "robustness_evaluation",
+      "description": "Check that model robustness is evaluated through noise injection, feature perturbation, or similar adversarial testing. Models should degrade gracefully under realistic noise levels.",
+      "severity": "medium"
+    },
+    {
+      "name": "fairness_evaluation_when_applicable",
+      "description": "When sensitive columns are identified, verify that per-group performance metrics are computed and fairness gaps are reported. Missing fairness evaluation when sensitive data is available is a methodology gap.",
+      "severity": "low"
+    },
+    {
+      "name": "reproducibility_seeding",
+      "description": "Verify that random seeds are set for all stochastic components (model initialization, CV splitting, data shuffling) to ensure reproducible results.",
+      "severity": "low"
+    }
+  ]
+}

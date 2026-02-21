@@ -1,0 +1,22 @@
+{
+  "organism_name": "Demo Task Tracker",
+  "stated_problem": "Need a lightweight in-memory task tracker with status transitions and a health check endpoint",
+  "root_need": "Ship features safely with autonomous coding and tests",
+  "features": [
+    {
+      "name": "Task CRUD",
+      "description": "Create, read, update, and delete tasks stored in a Python dict. Each task has an id, title, status (pending/in_progress/done), and created_at timestamp.",
+      "success_metric": "integration",
+      "threshold": "all CRUD tests pass",
+      "verification_method": "integration-test"
+    },
+    {
+      "name": "Health Endpoint",
+      "description": "A simple function that returns a dict with status=healthy, task_count, and uptime_seconds.",
+      "success_metric": "binary",
+      "threshold": "returns healthy",
+      "verification_method": "integration-test"
+    }
+  ],
+  "user_confirmed_phase1": true
+}

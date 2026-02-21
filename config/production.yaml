@@ -1,0 +1,5 @@
+sotappr:
+  governance_pack: strict
+  require_human_review_before_done: true
+  max_files_changed_per_task: 40
+  max_estimated_cost_per_task_usd: 3.0

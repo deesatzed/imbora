@@ -1,0 +1,67 @@
+[project]
+name = "the-associate"
+version = "0.1.0"
+description = "Anti-Fragile AI Orchestrator — loops AND learns"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+dependencies = [
+    "psycopg[binary]>=3.1.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "httpx>=0.25.0",
+    "sentence-transformers>=2.2.0",
+    "numpy>=1.24.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+    "click>=8.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.4.0",
+]
+datasci = [
+    "scikit-learn>=1.4.0",
+    "xgboost>=2.0.0",
+    "catboost>=1.2.0",
+    "lightgbm>=4.0.0",
+    "shap>=0.43.0",
+    "mapie>=0.8.0",
+    "pandas>=2.0.0",
+    "polars>=0.20.0",
+    "joblib>=1.3.0",
+    "cleanlab>=2.0.0",
+    "tabpfn>=2.0.0",
+    "dnamite>=0.1.0",
+    "imbalanced-ensemble>=0.2.0",
+    "imbalanced-learn>=0.12.0",
+    "scipy>=1.10.0",
+]
+
+[project.scripts]
+associate = "the_associate.cli:main"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "the_associate*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]

@@ -1,0 +1,449 @@
+{
+  "protocol_version": "apc/1.0",
+  "name": "Agent Packet State Machines",
+  "version": "1.0.0",
+  "source_inspirations": [
+    "xplurx substrate patches (CLAIM, ARTIFACT, SIGNAL)",
+    "xplurx protocol exchange and lineage tracking",
+    "xplurx transfer throttling to prevent homogenization",
+    "xplurx CI gates (RTF, STAB, AUD, OUT, LEARN)",
+    "xplurx fair differentiation research phase"
+  ],
+  "ci_thresholds": {
+    "rtf": 1.0,
+    "stability": 0.9,
+    "audit": 1.0,
+    "outcome": 0.5,
+    "learnability": 0.7,
+    "generalization_ratio": 0.8,
+    "max_drift_risk": 0.3
+  },
+  "phase_policy": {
+    "RESEARCH": {
+      "allowed_packet_types": [
+        "TASK_IR",
+        "IDEA",
+        "CLAIM",
+        "SIGNAL",
+        "HEARTBEAT"
+      ],
+      "transfer_allowed": false
+    },
+    "DISCOVERY": {
+      "allowed_packet_types": [
+        "TASK_IR",
+        "IDEA",
+        "CLAIM",
+        "ARTIFACT",
+        "SIGNAL",
+        "HEARTBEAT"
+      ],
+      "transfer_allowed": false
+    },
+    "REFINEMENT": {
+      "allowed_packet_types": [
+        "IDEA",
+        "CLAIM",
+        "TRANSFER",
+        "ARBITRATION",
+        "SIGNAL",
+        "HEARTBEAT"
+      ],
+      "transfer_allowed": true,
+      "transfer_guard": "sender_score > receiver_score * 1.2"
+    },
+    "CONVERGENCE": {
+      "allowed_packet_types": [
+        "TRANSFER",
+        "ARBITRATION",
+        "DECISION",
+        "SIGNAL",
+        "HEARTBEAT"
+      ],
+      "transfer_allowed": true,
+      "transfer_guard": "top_k <= 2"
+    },
+    "ARBITRATION": {
+      "allowed_packet_types": [
+        "ARBITRATION",
+        "DECISION",
+        "CLAIM",
+        "SIGNAL",
+        "HEARTBEAT"
+      ],
+      "transfer_allowed": false
+    },
+    "EXECUTION": {
+      "allowed_packet_types": [
+        "DECISION",
+        "ARTIFACT",
+        "EVAL",
+        "SIGNAL",
+        "HEARTBEAT",
+        "ERROR"
+      ],
+      "transfer_allowed": false
+    },
+    "VALIDATION": {
+      "allowed_packet_types": [
+        "EVAL",
+        "CLAIM",
+        "RETRACTION",
+        "DECISION",
+        "SIGNAL",
+        "HEARTBEAT"
+      ],
+      "transfer_allowed": false
+    },
+    "PROMOTION": {
+      "allowed_packet_types": [
+        "TRANSFER",
+        "DECISION",
+        "ARTIFACT",
+        "SIGNAL",
+        "HEARTBEAT"
+      ],
+      "transfer_allowed": true,
+      "transfer_guard": "mode in [WINNER_TO_LOSERS, COMMONS_SEED]"
+    }
+  },
+  "transfer_throttling": {
+    "generation_0_10": {
+      "transfer_enabled": false,
+      "reason": "independent discovery window"
+    },
+    "generation_11_20": {
+      "transfer_enabled": true,
+      "selector": "SELECTIVE_IMPORT",
+      "min_score_multiplier": 1.2,
+      "top_k": 2
+    },
+    "generation_21_plus": {
+      "transfer_enabled": true,
+      "selector": "WINNER_TO_LOSERS",
+      "top_k": 2,
+      "cross_use_case_allowed": true
+    }
+  },
+  "state_machines": {
+    "packet_lifecycle": {
+      "initial_state": "DRAFT",
+      "terminal_states": [
+        "ARCHIVED",
+        "REJECTED_SCHEMA",
+        "REJECTED_POLICY",
+        "EXPIRED",
+        "RETRACTED"
+      ],
+      "states": [
+        "DRAFT",
+        "NORMALIZED",
+        "SCHEMA_VALIDATED",
+        "POLICY_VALIDATED",
+        "ROUTED",
+        "DELIVERED",
+        "APPLIED",
+        "VERIFIED",
+        "PROMOTED",
+        "ARCHIVED",
+        "REJECTED_SCHEMA",
+        "REJECTED_POLICY",
+        "EXPIRED",
+        "SUPERSEDED",
+        "RETRACTED"
+      ],
+      "transitions": [
+        {
+          "from": "DRAFT",
+          "to": "NORMALIZED",
+          "event": "emit",
+          "actions": [
+            "canonicalize_payload",
+            "compute_payload_hash"
+          ]
+        },
+        {
+          "from": "NORMALIZED",
+          "to": "SCHEMA_VALIDATED",
+          "event": "schema_pass"
+        },
+        {
+          "from": "NORMALIZED",
+          "to": "REJECTED_SCHEMA",
+          "event": "schema_fail"
+        },
+        {
+          "from": "SCHEMA_VALIDATED",
+          "to": "POLICY_VALIDATED",
+          "event": "policy_pass",
+          "guards": [
+            "packet_type allowed in run_phase",
+            "anti_drift_8_checks_pass"
+          ]
+        },
+        {
+          "from": "SCHEMA_VALIDATED",
+          "to": "REJECTED_POLICY",
+          "event": "policy_fail"
+        },
+        {
+          "from": "POLICY_VALIDATED",
+          "to": "ROUTED",
+          "event": "route_selected"
+        },
+        {
+          "from": "ROUTED",
+          "to": "DELIVERED",
+          "event": "delivery_ack"
+        },
+        {
+          "from": "ROUTED",
+          "to": "EXPIRED",
+          "event": "ttl_expired"
+        },
+        {
+          "from": "DELIVERED",
+          "to": "APPLIED",
+          "event": "consumer_apply"
+        },
+        {
+          "from": "APPLIED",
+          "to": "VERIFIED",
+          "event": "verification_pass",
+          "guards": [
+            "proof_bundle_present_for_claim_eval"
+          ]
+        },
+        {
+          "from": "APPLIED",
+          "to": "REJECTED_POLICY",
+          "event": "verification_fail"
+        },
+        {
+          "from": "VERIFIED",
+          "to": "PROMOTED",
+          "event": "promotion_eligible",
+          "guards": [
+            "ci_thresholds_pass",
+            "generalization_ratio >= 0.8",
+            "drift_risk <= 0.3"
+          ]
+        },
+        {
+          "from": "VERIFIED",
+          "to": "ARCHIVED",
+          "event": "non_promotable_complete"
+        },
+        {
+          "from": "PROMOTED",
+          "to": "ARCHIVED",
+          "event": "persisted"
+        },
+        {
+          "from": "APPLIED",
+          "to": "SUPERSEDED",
+          "event": "higher_conflict_resolution_arrived"
+        },
+        {
+          "from": "SUPERSEDED",
+          "to": "ARCHIVED",
+          "event": "supersession_recorded"
+        },
+        {
+          "from": "*",
+          "to": "RETRACTED",
+          "event": "retraction_packet_received"
+        }
+      ]
+    },
+    "inter_agent_coordination": {
+      "initial_state": "SESSION_OPEN",
+      "terminal_states": [
+        "CLOSED",
+        "HALTED"
+      ],
+      "states": [
+        "SESSION_OPEN",
+        "DIFFERENTIATED_RESEARCH",
+        "INDEPENDENT_DISCOVERY",
+        "SELECTIVE_TRANSFER",
+        "CONTROLLED_CONVERGENCE",
+        "ARBITRATION",
+        "EXECUTION",
+        "VALIDATION",
+        "PROMOTION",
+        "CLOSED",
+        "HALTED"
+      ],
+      "transitions": [
+        {
+          "from": "SESSION_OPEN",
+          "to": "DIFFERENTIATED_RESEARCH",
+          "event": "research_briefs_dispatched"
+        },
+        {
+          "from": "DIFFERENTIATED_RESEARCH",
+          "to": "INDEPENDENT_DISCOVERY",
+          "event": "all_swarms_ready"
+        },
+        {
+          "from": "INDEPENDENT_DISCOVERY",
+          "to": "SELECTIVE_TRANSFER",
+          "event": "generation_window_open",
+          "guards": [
+            "generation >= 11"
+          ]
+        },
+        {
+          "from": "SELECTIVE_TRANSFER",
+          "to": "CONTROLLED_CONVERGENCE",
+          "event": "transfer_accepted",
+          "guards": [
+            "sender_score > receiver_score * 1.2",
+            "top_k <= 2"
+          ]
+        },
+        {
+          "from": "CONTROLLED_CONVERGENCE",
+          "to": "ARBITRATION",
+          "event": "candidate_pool_ready",
+          "guards": [
+            "candidate_count >= 2"
+          ]
+        },
+        {
+          "from": "ARBITRATION",
+          "to": "EXECUTION",
+          "event": "decision_committed",
+          "guards": [
+            "no_vetoes_or_veto_overridden"
+          ]
+        },
+        {
+          "from": "EXECUTION",
+          "to": "VALIDATION",
+          "event": "artifact_and_eval_emitted"
+        },
+        {
+          "from": "VALIDATION",
+          "to": "PROMOTION",
+          "event": "validation_pass",
+          "guards": [
+            "rtf == 1.0",
+            "stability >= 0.9",
+            "audit == 1.0",
+            "outcome >= 0.5",
+            "learnability >= 0.7",
+            "generalization_ratio >= 0.8",
+            "drift_risk <= 0.3"
+          ]
+        },
+        {
+          "from": "VALIDATION",
+          "to": "INDEPENDENT_DISCOVERY",
+          "event": "validation_fail_or_drift"
+        },
+        {
+          "from": "PROMOTION",
+          "to": "CLOSED",
+          "event": "commons_commit_complete"
+        },
+        {
+          "from": "*",
+          "to": "HALTED",
+          "event": "stop_signal_or_budget_exhausted"
+        }
+      ]
+    },
+    "intra_agent_coordination": {
+      "initial_state": "LOCAL_IDLE",
+      "terminal_states": [
+        "LOCAL_IDLE",
+        "LOCAL_HALT"
+      ],
+      "states": [
+        "LOCAL_IDLE",
+        "CONTEXT_SYNC",
+        "IDEA_SYNTHESIS",
+        "SELF_CRITIQUE",
+        "LOCAL_BUILD",
+        "LOCAL_VERIFY",
+        "PUBLISH",
+        "WAIT_FOR_ACK",
+        "LOCAL_HALT"
+      ],
+      "transitions": [
+        {
+          "from": "LOCAL_IDLE",
+          "to": "CONTEXT_SYNC",
+          "event": "task_assigned"
+        },
+        {
+          "from": "CONTEXT_SYNC",
+          "to": "IDEA_SYNTHESIS",
+          "event": "context_complete"
+        },
+        {
+          "from": "IDEA_SYNTHESIS",
+          "to": "SELF_CRITIQUE",
+          "event": "idea_packet_ready"
+        },
+        {
+          "from": "SELF_CRITIQUE",
+          "to": "LOCAL_BUILD",
+          "event": "critique_pass"
+        },
+        {
+          "from": "SELF_CRITIQUE",
+          "to": "IDEA_SYNTHESIS",
+          "event": "critique_fail"
+        },
+        {
+          "from": "LOCAL_BUILD",
+          "to": "LOCAL_VERIFY",
+          "event": "artifact_local_ready"
+        },
+        {
+          "from": "LOCAL_VERIFY",
+          "to": "PUBLISH",
+          "event": "local_checks_pass"
+        },
+        {
+          "from": "LOCAL_VERIFY",
+          "to": "IDEA_SYNTHESIS",
+          "event": "local_checks_fail"
+        },
+        {
+          "from": "PUBLISH",
+          "to": "WAIT_FOR_ACK",
+          "event": "packet_emitted"
+        },
+        {
+          "from": "WAIT_FOR_ACK",
+          "to": "LOCAL_IDLE",
+          "event": "ack_accepted"
+        },
+        {
+          "from": "WAIT_FOR_ACK",
+          "to": "IDEA_SYNTHESIS",
+          "event": "ack_rejected_or_deferred"
+        },
+        {
+          "from": "*",
+          "to": "LOCAL_HALT",
+          "event": "cancel_or_error"
+        }
+      ]
+    }
+  },
+  "anti_drift_8_checks": [
+    "strengthens_language_evolution",
+    "ci_verifiable",
+    "supports_competition",
+    "within_current_scope",
+    "maps_to_spec_reference",
+    "maps_to_concrete_module",
+    "aligns_with_core_architecture",
+    "phase_appropriate"
+  ]
+}

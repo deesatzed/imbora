@@ -1,0 +1,44 @@
+# Model Registry — USER MANAGED
+# The Associate never hardcodes model versions.
+# Update these as new models become available on OpenRouter.
+#
+# Format: role -> OpenRouter model ID
+# Check https://openrouter.ai/models for current options.
+
+roles:
+  # Primary code generation
+  builder: anthropic/claude-opus-4.6
+
+  # Code audit / sentinel review
+  sentinel: qwen/qwen3-max-thinking
+
+  # Context research and librarian
+  librarian: moonshotai/kimi-k2.5
+
+  # Council peer review — MUST be a different model family than builder
+  council: z-ai/glm-5
+
+  # Research unit (lightweight, fast)
+  research: google/gemini-3-flash-preview
+
+  # Data science analysis (structured reasoning for DS pipeline)
+  ds_analyst: google/gemini-3-flash-preview
+
+  # Data science evaluation (model behavior analysis)
+  ds_evaluator: google/gemini-3-flash-preview
+
+# Optional role-specific fallback chains, used in order.
+fallbacks:
+  builder:
+    - google/gemini-3-flash-preview
+    - z-ai/glm-5
+  sentinel:
+    - z-ai/glm-5
+  council:
+    - google/gemini-3-flash-preview
+  ds_analyst:
+    - anthropic/claude-opus-4.6
+    - z-ai/glm-5
+  ds_evaluator:
+    - anthropic/claude-opus-4.6
+    - z-ai/glm-5

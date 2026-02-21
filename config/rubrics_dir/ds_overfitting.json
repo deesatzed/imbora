@@ -1,0 +1,64 @@
+{
+  "rubric_name": "ds_overfitting",
+  "description": "Rubric for detecting overfitting indicators in model training and ensemble construction. Checks for train-test score gaps, cross-validation variance, model complexity, regularization, and ensemble stacking risks.",
+  "task_type": "ds_overfitting",
+  "task_type_keywords": ["ds_evaluation", "ds_training", "ds_ensemble"],
+  "dimensions": [
+    {"name": "generalization", "weight": 0.35, "description": "Model generalizes well to unseen data with minimal train-test gap"},
+    {"name": "cv_stability", "weight": 0.25, "description": "Cross-validation scores are stable across folds with low variance"},
+    {"name": "complexity_control", "weight": 0.25, "description": "Model complexity is appropriate for dataset size and feature count"},
+    {"name": "regularization", "weight": 0.15, "description": "Adequate regularization applied to prevent memorization"}
+  ],
+  "checks": [
+    {
+      "name": "train_test_score_gap",
+      "description": "Compare training score vs cross-validation score. A gap exceeding 10% indicates overfitting. Perfect training accuracy (1.0) on non-trivial data is a strong overfitting signal.",
+      "severity": "critical"
+    },
+    {
+      "name": "cv_score_variance",
+      "description": "Check standard deviation of cross-validation scores across folds. High variance (std > 0.05 for accuracy, std > 0.10 for R2) indicates unstable model that may overfit to specific folds.",
+      "severity": "high"
+    },
+    {
+      "name": "sample_to_feature_ratio",
+      "description": "Verify that the number of training samples is sufficient relative to feature count. Ratios below 10:1 (samples:features) are high-risk for overfitting without strong regularization.",
+      "severity": "high"
+    },
+    {
+      "name": "tree_depth_appropriateness",
+      "description": "For tree-based models, check that max_depth is not excessively large relative to dataset size. Deep trees on small datasets memorize noise.",
+      "severity": "high"
+    },
+    {
+      "name": "ensemble_meta_learner_inflation",
+      "description": "In stacked ensembles, check if the meta-learner score significantly exceeds all base model scores. An improvement > 5% over the best base model may indicate leakage in the stacking process.",
+      "severity": "high"
+    },
+    {
+      "name": "learning_curve_convergence",
+      "description": "If learning curve data is available, verify that training and validation curves converge. Diverging curves indicate overfitting; parallel non-converging curves indicate underfitting.",
+      "severity": "medium"
+    },
+    {
+      "name": "early_stopping_absence",
+      "description": "For iterative models (boosting, neural nets), check that early stopping or iteration limiting is configured. Unbounded iterations risk fitting noise.",
+      "severity": "medium"
+    },
+    {
+      "name": "regularization_parameters",
+      "description": "Verify that regularization is configured (L1/L2 penalty, min_samples_leaf, learning_rate reduction). Models without regularization on small-medium datasets are overfitting risks.",
+      "severity": "medium"
+    },
+    {
+      "name": "noise_sensitivity",
+      "description": "Check robustness evaluation results. Score drops exceeding 15% under 0.1*std Gaussian noise indicate overfitting to exact training distribution.",
+      "severity": "medium"
+    },
+    {
+      "name": "feature_importance_instability",
+      "description": "If feature importances vary significantly across CV folds, the model may be overfitting to fold-specific patterns rather than learning stable signals.",
+      "severity": "low"
+    }
+  ]
+}

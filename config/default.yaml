@@ -1,0 +1,167 @@
+# The Associate — Default Configuration
+
+database:
+  backend: postgresql
+  host: localhost
+  port: 5433
+  dbname: the_associate
+  user: associate
+  password: associate
+
+llm:
+  provider: openrouter
+  base_url: https://openrouter.ai/api/v1
+  default_temperature: 0.3
+  default_max_tokens: 4096
+  timeout_seconds: 120
+  provider_retries: 2
+  provider_backoff_seconds: 2.0
+  fallback_models: []
+  model_failure_threshold: 2
+  model_cooldown_seconds: 90
+
+search:
+  provider: tavily
+  max_results: 3
+
+embeddings:
+  model: all-MiniLM-L6-v2
+  dimension: 384
+
+orchestrator:
+  max_retries_per_task: 5
+  council_trigger_threshold: 2
+  council_max_invocations: 3
+  checkpoint_strategy: git_stash
+  max_tokens_per_task: 100000
+  max_task_age_minutes: 30
+  enable_multi_candidate_arbitration: false
+  arbitration_candidate_count: 2
+  arbitration_low_confidence_threshold: 0.55
+  arbitration_conflict_trigger_count: 1
+  enable_prebuild_self_correction: false
+  self_correction_confidence_threshold: 0.60
+  self_correction_conflict_threshold: 1
+
+sentinel:
+  llm_deep_check: false
+  drift_threshold: 0.40
+  quality_score_threshold: 0.60
+  rubrics_dir: null
+
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+security:
+  autonomy_level: supervised
+  workspace_only: true
+  allowed_commands:
+    - git
+    - npm
+    - cargo
+    - ls
+    - cat
+    - grep
+    - find
+    - echo
+    - pwd
+    - wc
+    - head
+    - tail
+    - pytest
+    - python
+    - python3
+  forbidden_paths:
+    - /etc
+    - /root
+    - /home
+    - /usr
+    - /bin
+    - /sbin
+    - /lib
+    - /opt
+    - /boot
+    - /dev
+    - /proc
+    - /sys
+    - /var
+    - /tmp
+    - ~/.ssh
+    - ~/.gnupg
+    - ~/.aws
+    - ~/.config
+  max_actions_per_hour: 200
+  sanitize_env: true
+  safe_env_vars:
+    - PATH
+    - HOME
+    - TERM
+    - LANG
+    - LC_ALL
+    - LC_CTYPE
+    - USER
+    - SHELL
+    - TMPDIR
+    - VIRTUAL_ENV
+    - PYTHONPATH
+
+sotappr:
+  governance_pack: balanced
+  require_human_review_before_done: false
+  max_files_changed_per_task: 25
+  protected_paths:
+    - .env
+    - .env.production
+    - .git/
+    - secrets/
+    - credentials/
+  max_estimated_cost_per_task_usd: 5.0
+  estimated_cost_per_1k_tokens_usd: 0.02
+  report_archive_dir: artifacts/sotappr
+  observability_jsonl_path: artifacts/sotappr/events.jsonl
+  observability_metrics_path: artifacts/sotappr/metrics.json
+  skills_dir: null
+  enable_wrapup_workflow: false
+  transfer_arbitration_candidate_limit: 4
+  transfer_arbitration_top_k: 1
+  enable_protocol_effectiveness_gate: true
+  min_protocol_effectiveness_samples: 3
+  min_protocol_effectiveness_score: 0.50
+  enable_protocol_decay_policy: true
+  protocol_decay_min_samples: 5
+  protocol_decay_effectiveness_threshold: 0.35
+  protocol_decay_drift_risk_threshold: 0.75
+
+token_tracking:
+  enabled: true
+  jsonl_path: artifacts/sotappr/token_costs.jsonl
+  cost_per_1k_input: 0.01
+  cost_per_1k_output: 0.03
+
+datasci:
+  enabled: true
+  artifacts_dir: artifacts/datasci
+  small_dataset_threshold: 10000
+  medium_dataset_threshold: 50000
+  cv_folds: 5
+  llm_fe_generations: 5
+  llm_fe_population_size: 10
+  conformal_alpha: 0.10
+  pareto_objectives:
+    - balanced_accuracy
+    - interpretability
+    - speed
+  max_model_training_tokens: 50000
+  enable_tabpfn: true
+  enable_tabicl: true
+  enable_nam: true
+  cleanlab_enabled: true
+  enable_augmentation: true
+  imbalance_threshold: 3.0
+  max_augmentation_ratio: 5.0
+  augmentation_strategy: auto
+  enable_imbens: true
+  enable_calibration: true
+  enable_threshold_optimization: true
+  enable_fe_assessment: true
