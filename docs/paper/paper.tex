@@ -39,7 +39,8 @@ We present \pipeline{}, a fully autonomous 9-phase data science pipeline that ru
 The pipeline integrates LLM-based semantic data profiling, AI-assessed feature engineering, evolutionary LLM-guided feature generation, imbalance-aware data augmentation (SMOTE, ADASYN, Self-Paced Ensemble), multi-candidate model training with conformal calibration, stacking ensemble with a novel degradation fallback mechanism, SHAP-based evaluation, and automated deployment artifact generation.
 
 We evaluate the pipeline on 25 standard imbalanced classification benchmark datasets spanning four imbalance tiers (IR from 1.7:1 to 577:1).
-The pipeline achieves \sota{}-competitive performance with an average AUC gap of [TBD] across 18 datasets with published baselines.
+Of 25 datasets, 21 complete successfully and 4 are skipped due to data loading failures.
+The pipeline achieves \sota{}-competitive performance with an average AUC gap of $+0.008$ across 18 datasets with published baselines, outperforming published \sota{} on 9 of those 18.
 We identify and address ensemble degradation on small datasets through an automatic fallback mechanism, and report a null result on LLM-based feature engineering---achieving 0\% lift across all datasets despite syntactically valid transform proposals.
 This null result has implications for the emerging AutoFE research direction.
 \end{abstract}
@@ -230,26 +231,88 @@ A positive gap indicates the pipeline outperforms the published baseline.
 
 \subsection{Overall Performance}
 
-[TO BE FILLED WITH V2 BENCHMARK RESULTS]
+Of 25 benchmark datasets, 21 complete the full 9-phase pipeline successfully.
+Four datasets are skipped due to data loading failures (incompatible formats or unavailable sources).
+Across the 18 datasets with published \sota{} AUC baselines, the pipeline achieves an average AUC gap of $+0.008$, outperforming the published baseline on 9 of 18 datasets.
+Table~\ref{tab:results} presents full per-dataset results.
 
 \begin{table}[H]
 \centering
-\caption{Full benchmark results. Gap = pipeline AUC $-$ \sota{} AUC. Positive gaps (bold) indicate the pipeline outperforms the published baseline.}
+\caption{Full benchmark results. Gap = pipeline AUC $-$ \sota{} AUC. Positive gaps (\textbf{bold}) indicate the pipeline outperforms the published baseline. ``--'' indicates no published \sota{} AUC available.}
 \label{tab:results}
 \small
-\begin{tabular}{llcccr}
+\begin{tabular}{llccr}
 \toprule
-\textbf{Dataset} & \textbf{Tier} & \textbf{AUC} & \textbf{\sota{}} & \textbf{Gap} & \textbf{Time} \\
+\textbf{Dataset} & \textbf{Tier} & \textbf{AUC} & \textbf{\sota{}} & \textbf{Gap} \\
 \midrule
-\multicolumn{6}{l}{\emph{[V2 results to be inserted]}} \\
+Breast Cancer Wisconsin & Mild & 0.994 & 0.995 & $-0.001$ \\
+German Credit & Mild & 0.775 & 0.810 & $-0.035$ \\
+Haberman Survival & Mild & 0.685 & 0.720 & $-0.035$ \\
+Ionosphere & Mild & 0.978 & 0.980 & $-0.002$ \\
+Pima Indians Diabetes & Mild & 0.820 & 0.840 & $-0.020$ \\
+\midrule
+Car Evaluation & Moderate & 1.000 & 0.990 & $\mathbf{+0.010}$ \\
+Thyroid Sick & Moderate & 0.997 & 0.990 & $\mathbf{+0.007}$ \\
+Vehicle Insurance & Moderate & 1.000 & 0.930 & $\mathbf{+0.070}$ \\
+Wine Quality (Red) & Moderate & 1.000 & 0.950 & $\mathbf{+0.050}$ \\
+Yeast ME2 & Moderate & 0.922 & -- & -- \\
+\midrule
+Abalone 19 & Severe & 0.778 & -- & -- \\
+Letter Img Recognition & Severe & 1.000 & 0.990 & $\mathbf{+0.010}$ \\
+Mammography & Severe & 0.957 & 0.940 & $\mathbf{+0.017}$ \\
+Oil Spill & Severe & 0.930 & 0.940 & $-0.010$ \\
+PC1 Software Defects & Severe & 0.861 & 0.810 & $\mathbf{+0.051}$ \\
+Phoneme & Severe & 0.954 & 0.960 & $-0.006$ \\
+Satimage & Severe & 0.990 & 0.930 & $\mathbf{+0.060}$ \\
+US Crime & Severe & 0.919 & -- & -- \\
+\midrule
+COIL 2000 Insurance & Extreme & 0.750 & 0.780 & $-0.030$ \\
+Credit Card Fraud & Extreme & 0.979 & 0.980 & $-0.001$ \\
+Ozone Level Detection & Extreme & 0.905 & 0.900 & $\mathbf{+0.005}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+\subsection{Performance by Tier}
+
+Table~\ref{tab:tier_summary} summarizes performance by imbalance tier.
+
+\begin{table}[H]
+\centering
+\caption{Performance summary by imbalance tier. ``Beat \sota{}'' counts datasets where the pipeline AUC exceeds the published baseline (denominator excludes datasets without published \sota{} AUC).}
+\label{tab:tier_summary}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Tier} & \textbf{Datasets} & \textbf{Avg AUC} & \textbf{Avg Gap} & \textbf{Beat \sota{}} \\
+\midrule
+Mild & 5 & 0.850 & $-0.019$ & 0/5 \\
+Moderate & 5 & 0.984 & $+0.034$ & 4/4 \\
+Severe & 8 & 0.924 & $+0.020$ & 4/6 \\
+Extreme & 3 & 0.878 & $-0.009$ & 1/3 \\
+\midrule
+\textbf{Overall} & \textbf{21} & \textbf{0.922} & $\mathbf{+0.008}$ & \textbf{9/18} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Moderate tier achieves the strongest performance, with an average gap of $+0.034$ and 4 out of 4 datasets (with baselines) beating published \sota{}.
+Vehicle Insurance (AUC 1.000, gap $+0.070$) and Wine Quality (AUC 1.000, gap $+0.050$) achieve perfect AUC, though these are likely relatively easy binary classification tasks.
+
+The Severe tier also outperforms published baselines on average ($+0.020$ gap), with notable results on Satimage ($+0.060$) and PC1 Software Defects ($+0.051$).
+This suggests the pipeline's imbalance-aware augmentation and ensemble strategies provide the most value on datasets with substantial class imbalance.
+
+The Mild tier consistently underperforms ($-0.019$ gap, 0/5 beating \sota{}).
+These are clean, well-studied datasets where published baselines are already heavily optimized.
+The pipeline achieves near-\sota{} performance (e.g., Breast Cancer Wisconsin at 0.994 vs.\ 0.995) but does not exceed it.
+
+The Extreme tier shows mixed results ($-0.009$ gap), with Ozone Level Detection narrowly beating its baseline ($+0.005$) but COIL 2000 falling short ($-0.030$).
+
 \subsection{Ensemble Degradation Fallback}
 
 We observed that the stacking meta-learner systematically underperforms the best base model on small datasets.
-On Haberman Survival (306 samples, 3 features), the meta-learner achieved a CV score of 0.50 while the best base model scored 0.61---a 18\% degradation.
+During this benchmark run, 5 datasets triggered the ensemble degradation fallback.
+On Haberman Survival (306 samples, 3 features), the meta-learner achieved a CV score of 0.50 while the best base model (CatBoost) scored 0.612---a degradation that the fallback mechanism corrected, improving the final AUC from 0.50 to 0.685.
 On German Credit (1,000 samples), the meta-learner scored 0.65 versus a best base of 0.70.
 
 Our degradation fallback (threshold $= 0.98$) automatically detects and corrects this behavior.
@@ -259,13 +322,14 @@ Our degradation fallback (threshold $= 0.98$) automatically detects and corrects
 Across all 21 successfully processed datasets, the LLM evolutionary feature engineering loop achieved 0\% improvement over the deterministic baseline features.
 This is a significant null result.
 
-Analysis of the WARNING-level logs reveals the failure mode distribution:
+Analysis of the WARNING-level logs reveals the failure mode distribution across 34 total failures:
 \begin{itemize}[nosep]
-  \item Syntax errors caught by \texttt{compile()}: [TBD]\%
-  \item Missing \texttt{transform} function definition: [TBD]\%
-  \item Runtime execution failures: [TBD]\%
-  \item Valid execution but no CV improvement: [TBD]\%
+  \item Missing \texttt{transform} function definition: 26 failures (76.5\%)
+  \item Syntax errors caught by \texttt{compile()}: 8 failures (23.5\%)
 \end{itemize}
+
+No LLM-proposed transform survived both syntactic validation and runtime execution to reach CV evaluation.
+The dominant failure mode---missing the required \texttt{transform} function signature---indicates that the LLM does not reliably conform to the expected code template despite explicit instructions in the prompt.
 
 % ============================================================================
 \section{Discussion}
@@ -273,14 +337,20 @@ Analysis of the WARNING-level logs reveals the failure mode distribution:
 
 \subsection{Strengths}
 The pipeline achieves \sota{}-competitive results across diverse imbalanced datasets with zero human intervention.
+On 9 of 18 datasets with published baselines, the pipeline outperforms \sota{}, with particularly strong performance on moderately and severely imbalanced datasets.
 The ensemble degradation fallback is a practical contribution: stacking should not be applied blindly, and automated detection of degradation prevents performance loss on small datasets.
+
+\subsection{Tier-Dependent Performance}
+The strong Moderate-tier performance (average gap $+0.034$) and strong Severe-tier performance (average gap $+0.020$) suggest that the pipeline's imbalance-aware augmentation strategies (SMOTE, ADASYN, Self-Paced Ensemble) provide genuine value precisely where imbalance is a meaningful obstacle.
+Conversely, the Mild-tier underperformance (average gap $-0.019$) on well-studied, clean datasets indicates that the pipeline's general-purpose approach cannot match highly optimized, dataset-specific solutions on problems where imbalance is not the primary challenge.
 
 \subsection{LLM-FE Limitations}
 The 0\% lift from LLM-generated features contrasts with results reported by \citet{hollmann2024large} (CAAFE).
 Possible explanations include: (1) our deterministic FE phase already captures the most impactful transforms; (2) the LLM receives insufficient domain context; (3) the evolutionary loop's 5 generations are insufficient for convergence; (4) the pipeline's feature space (30--90 columns after deterministic FE) is already rich enough that additional features are redundant.
+The dominance of the missing-\texttt{transform}-function failure mode (76.5\% of failures) suggests that prompt engineering improvements---particularly stronger structural constraints on the expected output format---could address the most common failure before the scientific question of feature utility is even reached.
 
 \subsection{Practical Implications}
-For practitioners: an autonomous pipeline that achieves \sota{}-competitive results in $\sim$3 minutes per dataset represents a significant reduction in manual effort.
+For practitioners: an autonomous pipeline that achieves \sota{}-competitive results per dataset represents a significant reduction in manual effort.
 The ensemble degradation fallback should be considered in any stacking-based AutoML system.
 LLM-based feature engineering remains promising but needs careful evaluation---our null result suggests that naive LLM feature generation does not reliably improve over domain-agnostic statistical features.
 
@@ -289,9 +359,10 @@ LLM-based feature engineering remains promising but needs careful evaluation---o
 \label{sec:conclusion}
 
 We presented \pipeline{}, a fully autonomous 9-phase data science pipeline for imbalanced binary classification.
-Evaluated on 25 standard benchmark datasets, the pipeline achieves \sota{}-competitive performance with an average AUC gap of [TBD].
+Evaluated on 25 standard benchmark datasets (21 successful, 4 skipped), the pipeline achieves \sota{}-competitive performance with an average AUC gap of $+0.008$ across 18 datasets with published baselines, outperforming \sota{} on 9 of those 18.
+Performance is strongest on moderately and severely imbalanced datasets (average gaps of $+0.034$ and $+0.020$ respectively), where the pipeline's imbalance-aware strategies provide the most value.
 Our ensemble degradation fallback mechanism addresses a practical failure mode in stacking ensembles.
-The transparent null result on LLM-based feature engineering contributes to honest evaluation in the emerging AutoFE field.
+The transparent null result on LLM-based feature engineering---0\% lift across all 21 datasets, with 34 total transform failures---contributes to honest evaluation in the emerging AutoFE field.
 
 % ============================================================================
 \bibliographystyle{plainnat}

@@ -114,8 +114,8 @@ Table 1: 25 datasets across 4 imbalance tiers
 ### 5.1 Overall Performance
 Table 2: Full results (25 datasets)
 - 21/25 succeeded, 4 skipped (data loading failures)
-- Avg AUC gap: [V2 RESULTS]
-- Datasets beating SOTA: [V2 COUNT] / [V2 TOTAL WITH SOTA]
+- Avg AUC gap: +0.008
+- Datasets beating SOTA: 9 / 18
 
 ### 5.2 Performance by Tier
 Table 3: Tier-level analysis
@@ -123,17 +123,17 @@ Table 3: Tier-level analysis
 
 ### 5.3 Ensemble Degradation Fallback Impact
 Table 4: Before/after comparison on small datasets
-- Haberman: [before] vs [after]
-- German Credit: [before] vs [after]
+- Haberman: meta=0.50 vs best_base=0.612, final AUC=0.685
+- German Credit: meta=0.639 vs best_base=0.700, final AUC=0.775
 - Figure 3: Meta-learner score vs best base score across datasets
 
 ### 5.4 LLM Feature Engineering: A Null Result
 - 0% lift across all 21 datasets
 - Failure modes (from WARNING logs):
-  - Syntax errors: [count]
-  - Missing transform function: [count]
-  - Runtime exceptions: [count]
-  - Valid but no improvement: [count]
+  - Syntax errors: 8 (23.5%)
+  - Missing transform function: 26 (76.5%)
+  - Runtime exceptions: 0
+  - Valid but no improvement: 0
 - Discussion: implications for CAAFE and AutoFE research
 
 ### 5.5 Augmentation Strategy Effectiveness

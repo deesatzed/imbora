@@ -257,8 +257,50 @@ Phase 7: Deployment -> DeploymentPackage
 
 ---
 
+## Phase 6: V2 Benchmark Results (2026-02-20)
+
+### V2 Run Summary
+Full 25-dataset benchmark re-run with all 5 improvements active:
+
+| Metric | V1 | V2 | Delta |
+|--------|----|----|-------|
+| Avg AUC gap | +0.016 | +0.008 | -0.008 |
+| Datasets beating SOTA | 8/18 | 9/18 | +1 |
+| Successful | 21/25 | 21/25 | 0 |
+
+Note: V2 gap is lower than V1 because SOTA corrections (Wine Quality 0.82->0.95, Vehicle Insurance 0.87->0.93) removed inflated gaps. After correction, pipeline still beats SOTA on average.
+
+### V2 Results by Tier
+| Tier | Count | Avg AUC | Avg Gap | Beating SOTA |
+|------|-------|---------|---------|-------------|
+| Mild | 5 | 0.850 | -0.019 | 0/5 |
+| Moderate | 5 | 0.984 | +0.034 | 4/4 |
+| Severe | 8 | 0.924 | +0.020 | 4/6 |
+| Extreme | 3 | 0.878 | -0.009 | 1/3 |
+
+### Improvement Impact
+1. **Ensemble degradation fallback**: Triggered on 5 datasets. Haberman improved from meta=0.50 to final AUC=0.685 via CatBoost fallback
+2. **LLM-FE logging**: Captured 34 total failures (26 missing transform function, 8 syntax errors). Confirmed 0% lift across all datasets
+3. **Augmentation path fix**: Quality gates still flag some datasets (empty class counts on deeper path issues), but pipeline continues non-blocking
+4. **SOTA corrections**: Wine Quality gap corrected from +0.180 to +0.050, Vehicle Insurance from +0.130 to +0.070
+
+### LLM-FE Failure Breakdown
+| Failure Mode | Count | Percentage |
+|-------------|-------|-----------|
+| Missing `transform` function | 26 | 76.5% |
+| Syntax errors | 8 | 23.5% |
+| Runtime exceptions | 0 | 0% |
+| Valid but no improvement | 0 | 0% |
+
+### Paper Status
+- LaTeX draft: `docs/paper/paper.tex` — fully populated with V2 results
+- Paper outline: `docs/paper/PAPER_OUTLINE.md` — updated with V2 numbers
+- All [TBD] placeholders replaced with real data
+
+---
+
 ## Next Steps
-1. Re-run full benchmark with 5 improvements to measure delta
-2. Prepare academic paper structure
-3. Run statistical significance tests (paired t-test / Wilcoxon signed-rank on AUC gaps)
-4. Generate visualizations (AUC gap by tier, pipeline phase timing breakdown)
+1. Statistical significance testing (Wilcoxon signed-rank on AUC gaps)
+2. Generate publication-quality figures (AUC gap by tier box plot, pipeline architecture diagram)
+3. Finalize bibliography and author information
+4. Submit to target venue
